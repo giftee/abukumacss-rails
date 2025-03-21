@@ -66,6 +66,10 @@ $ rails assets:precompile
 </body>
 ```
 
+## リリース
+
+[RELEASING.md](./RELEASING.md) をご参照ください。
+
 ## ライセンス
 
 このプロダクトは[MIT](./LICENSE)の条件に従ってライセンスされています。
