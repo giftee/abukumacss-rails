@@ -16,12 +16,18 @@ Gemfile に以下を記述して bundle install してください。
 gem "gifteeabukumacss-rails", github: "giftee/abukumacss-rails"
 ```
 
-`app/assets/stylesheets/application.css` に以下を追加し、Abukuma CSS を利用可能とします。
+`app/assets/stylesheets/application.css` に以下を追加し、Abukuma CSS を読み込みます。
 
 ```css
 /*
  *= require gifteeabukumacss/rails/style
  */
+```
+
+layout ファイルなどに以下を追加し、CSS を利用可能としてください。
+
+```rb
+<%= stylesheet_link_tag "gifteeabukumacss/rails/style", media: "all" %>
 ```
 
 また、利用時は事前にアセットプリコンパイルしてください。
