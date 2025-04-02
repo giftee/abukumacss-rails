@@ -4,16 +4,10 @@ Abukuma CSS は株式会社ギフティのデザインシステムの CSS framew
 
 ## インストール
 
-private repository を参照するので、PAT を用意してください。
-
-```bash
-$ export BUNDLE_GITHUB__COM=<github personal access token>
-```
-
 Gemfile に以下を記述して bundle install してください。
 
 ```rb
-gem "gifteeabukumacss-rails", github: "giftee/abukumacss-rails"
+gem "gifteeabukumacss-rails"
 ```
 
 `app/assets/stylesheets/application.css` に以下を追加し、Abukuma CSS を読み込みます。
