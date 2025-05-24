@@ -33,5 +33,5 @@ jobs:
           git add .
           git commit -m "[自動]AbukumaCSSの差分吸収_$CURRENT_DATETIME"
           git push -u origin $BRANCH_NAME
-          gh pr create --base $BASE_BRANCH --title "[自動]AbukumaCSSの差分吸収" --body "[自動]AbukumaCSSの差分吸収" --head $(git branch --show-current)
+          gh pr create --base "$BASE_BRANCH" --title "[自動]AbukumaCSSの差分吸収" --body "[自動]AbukumaCSSの差分吸収" --head "$(git branch --show-current)"
           echo "url=$(gh pr view --json url $BRANCH_NAME --jq .url)" >> $GITHUB_OUTPUT
