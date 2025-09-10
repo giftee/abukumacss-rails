@@ -1,0 +1,18 @@
+current directory: /home/runner/work/abukumacss-rails/abukumacss-rails/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+/opt/hostedtoolcache/Ruby/3.3.8/x64/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /home/runner/work/abukumacss-rails/abukumacss-rails/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20250520-2101-35t0vy sitelibdir\=./.gem.20250520-2101-35t0vy clean
+
+current directory: /home/runner/work/abukumacss-rails/abukumacss-rails/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20250520-2101-35t0vy sitelibdir\=./.gem.20250520-2101-35t0vy
+compiling cparse.c
+linking shared-object racc/cparse.so
+
+current directory: /home/runner/work/abukumacss-rails/abukumacss-rails/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20250520-2101-35t0vy sitelibdir\=./.gem.20250520-2101-35t0vy install
+/usr/bin/install -c -m 0755 cparse.so ./.gem.20250520-2101-35t0vy/racc
+
+current directory: /home/runner/work/abukumacss-rails/abukumacss-rails/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20250520-2101-35t0vy sitelibdir\=./.gem.20250520-2101-35t0vy clean
