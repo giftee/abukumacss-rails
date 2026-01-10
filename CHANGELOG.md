@@ -1,5 +1,10 @@
 # gifteeabukumacss-rails
 
+## 3.1.8
+
+* @giftee/abukuma-css v3.1.8 に追従
+
+
 ## 3.0.0
 
 * @giftee/abukuma-css v3.0.4 に追従
