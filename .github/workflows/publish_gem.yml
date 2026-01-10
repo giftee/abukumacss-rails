@@ -1,0 +1,64 @@
+name: publish_gem
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  publish:
+    # リリースPRがマージされた場合のみ実行
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3.8
+
+      - name: Get version from version.rb
+        id: version
+        run: |
+          VERSION=$(grep -oP 'VERSION = "\K[^"]+' lib/gifteeabukumacss/version.rb)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Gem version: $VERSION"
+
+      - name: Build gem
+        run: |
+          gem build gifteeabukumacss-rails.gemspec
+
+      - name: Publish to RubyGems
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        run: |
+          gem push gifteeabukumacss-rails-${{ steps.version.outputs.version }}.gem
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --notes "Release v${VERSION}
+
+          ## インストール
+
+          \`\`\`ruby
+          gem 'gifteeabukumacss-rails', '~> ${VERSION}'
+          \`\`\`
+
+          詳細は [CHANGELOG.md](CHANGELOG.md) を参照してください。"
+
+      - name: Summary
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "## Published gem v${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- RubyGems: https://rubygems.org/gems/gifteeabukumacss-rails" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub Release: https://github.com/${{ github.repository }}/releases/tag/v${VERSION}" >> $GITHUB_STEP_SUMMARY
