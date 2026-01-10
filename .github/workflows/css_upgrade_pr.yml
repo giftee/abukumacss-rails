@@ -3,6 +3,7 @@ name: css_upgrade_pr
 on:
   schedule:
     - cron: "0 6 * * MON-FRI"
+  workflow_dispatch: # 手動実行も可能に
 
 jobs:
   create_pr:
@@ -12,26 +13,72 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.3.8
           bundler-cache: true
           cache-version: 2
-      - name: Replace abukuma css
+
+      - name: Get current npm package version
+        id: npm_version
+        run: |
+          VERSION=$(curl -s https://registry.npmjs.org/@giftee/abukuma-css/latest | jq -r '.version')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current npm version: $VERSION"
+
+      - name: Download latest abukuma css
         run: |
           curl -o lib/assets/stylesheets/gifteeabukumacss/rails/style.css https://cdn.jsdelivr.net/npm/@giftee/abukuma-css@latest/dist/style.css
-          bundle exec rubocop -A
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet lib/assets/stylesheets/gifteeabukumacss/rails/style.css; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected"
+          fi
+
+      - name: Create PR if changes exist
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          NPM_VERSION: ${{ steps.npm_version.outputs.version }}
+        run: |
+          bundle exec rubocop -A || true
 
           CURRENT_DATETIME=$(date +'%Y%m%d%H%M')
-          BRANCH_NAME="feature/css_upgrade/graphql_diff_$CURRENT_DATETIME"
+          BRANCH_NAME="feature/css_upgrade/v${NPM_VERSION}_${CURRENT_DATETIME}"
 
           git config user.name github-actions
           git config user.email github-actions@github.com
 
-          git switch -c $BRANCH_NAME
+          git switch -c "$BRANCH_NAME"
           git add .
-          git commit -m "[自動]AbukumaCSSの差分吸収_$CURRENT_DATETIME"
-          git push -u origin $BRANCH_NAME
-          gh pr create --base $BASE_BRANCH --title "[自動]AbukumaCSSの差分吸収" --body "[自動]AbukumaCSSの差分吸収" --head $(git branch --show-current)
-          echo "url=$(gh pr view --json url $BRANCH_NAME --jq .url)" >> $GITHUB_OUTPUT
+          git commit -m "[自動] Abukuma CSS を v${NPM_VERSION} に更新"
+          git push -u origin "$BRANCH_NAME"
+
+          gh pr create \
+            --base main \
+            --title "[自動] Abukuma CSS を v${NPM_VERSION} に更新" \
+            --body "## 変更内容
+
+          @giftee/abukuma-css を **v${NPM_VERSION}** に更新しました。
+
+          ## 確認事項
+
+          - [ ] CSS の変更内容を確認
+          - [ ] 必要に応じて gem バージョンを更新
+
+          ---
+          *このPRは GitHub Actions により自動作成されました*"
+
+      - name: No changes summary
+        if: steps.changes.outputs.has_changes == 'false'
+        env:
+          NPM_VERSION: ${{ steps.npm_version.outputs.version }}
+        run: |
+          echo "::notice::Abukuma CSS is already up to date (v${NPM_VERSION})"
