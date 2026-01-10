@@ -2,6 +2,6 @@
 
 module Gifteeabukumacss
   module Rails
-    VERSION = "3.0.0"
+    VERSION = "3.1.8"
   end
 end
