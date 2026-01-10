@@ -20,8 +20,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.3.8
-          bundler-cache: true
-          cache-version: 2
+          # bundler-cache を使わない (frozen mode で Gemfile.lock を更新できなくなるため)
 
       - name: Get latest release tag
         id: latest_release
