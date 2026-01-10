@@ -57,7 +57,7 @@ jobs:
           git config user.email github-actions@github.com
 
           git switch -c "$BRANCH_NAME"
-          git add .
+          git add lib/assets/stylesheets/gifteeabukumacss/rails/style.css
           git commit -m "[自動] Abukuma CSS を v${NPM_VERSION} に更新"
           git push -u origin "$BRANCH_NAME"
 
