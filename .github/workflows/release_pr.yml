@@ -1,0 +1,163 @@
+name: release_pr
+
+on:
+  schedule:
+    - cron: "0 7 * * MON-FRI"
+  workflow_dispatch: # 手動実行も可能に
+
+jobs:
+  create_release_pr:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # タグを取得するために必要
+
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3.8
+          bundler-cache: true
+          cache-version: 2
+
+      - name: Get latest release tag
+        id: latest_release
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest release tag: $LATEST_TAG"
+
+      - name: Check for changes since last release
+        id: changes
+        env:
+          LATEST_TAG: ${{ steps.latest_release.outputs.tag }}
+        run: |
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No previous release found, checking for any commits"
+            COMMIT_COUNT=$(git rev-list --count HEAD)
+          else
+            COMMIT_COUNT=$(git rev-list --count "${LATEST_TAG}..HEAD")
+          fi
+
+          echo "Commits since last release: $COMMIT_COUNT"
+
+          if [ "$COMMIT_COUNT" -gt 0 ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if release PR already exists
+        id: existing_pr
+        run: |
+          EXISTING_PR=$(gh pr list --base main --head "release/" --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Release PR #$EXISTING_PR already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get current npm package version
+        id: npm_version
+        run: |
+          VERSION=$(curl -s https://registry.npmjs.org/@giftee/abukuma-css/latest | jq -r '.version')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current npm version: $VERSION"
+
+      - name: Get current gem version
+        id: gem_version
+        run: |
+          VERSION=$(grep -oP 'VERSION = "\K[^"]+' lib/gifteeabukumacss/version.rb)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current gem version: $VERSION"
+
+      - name: Create release PR
+        if: steps.changes.outputs.has_changes == 'true' && steps.existing_pr.outputs.exists == 'false'
+        env:
+          NPM_VERSION: ${{ steps.npm_version.outputs.version }}
+          GEM_VERSION: ${{ steps.gem_version.outputs.version }}
+          LATEST_TAG: ${{ steps.latest_release.outputs.tag }}
+        run: |
+          BRANCH_NAME="release/v${NPM_VERSION}"
+
+          # Check if branch already exists on remote
+          if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
+            echo "Branch $BRANCH_NAME already exists, skipping"
+            exit 0
+          fi
+
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+          git switch -c "$BRANCH_NAME"
+
+          # Update version.rb
+          sed -i "s/VERSION = \"${GEM_VERSION}\"/VERSION = \"${NPM_VERSION}\"/" lib/gifteeabukumacss/version.rb
+
+          # Update Gemfile.lock
+          bundle install
+
+          # Prepare changelog entry
+          CHANGELOG_ENTRY="## ${NPM_VERSION}\n\n* @giftee/abukuma-css v${NPM_VERSION} に追従\n"
+
+          # Insert new entry after the first line (# gifteeabukumacss-rails)
+          sed -i "1a\\\\n${CHANGELOG_ENTRY}" CHANGELOG.md
+
+          git add lib/gifteeabukumacss/version.rb Gemfile.lock CHANGELOG.md
+          git commit -m "release v${NPM_VERSION}"
+          git push -u origin "$BRANCH_NAME"
+
+          # Get commits since last release for PR body (written to file to avoid injection)
+          if [ -z "$LATEST_TAG" ]; then
+            git log --pretty=format:"* %s" HEAD > /tmp/commits.txt
+          else
+            git log --pretty=format:"* %s" "${LATEST_TAG}..HEAD^" > /tmp/commits.txt
+          fi
+
+          # Create PR body file
+          cat > /tmp/pr_body.md << 'PREOF'
+          ## リリース内容
+
+          @giftee/abukuma-css に追従するリリースです。
+
+          ## 変更ファイル
+
+          - `lib/gifteeabukumacss/version.rb` - バージョン更新
+          - `Gemfile.lock` - バージョン更新
+          - `CHANGELOG.md` - 変更履歴追記
+
+          ## リリース後の作業
+
+          - [ ] PR をマージ
+          - [ ] GitHub Release を作成
+          - [ ] gem をビルド: `gem build gifteeabukumacss-rails.gemspec`
+          - [ ] gem を push: `gem push gifteeabukumacss-rails-*.gem`
+
+          ## 前回リリースからの変更
+
+          PREOF
+
+          cat /tmp/commits.txt >> /tmp/pr_body.md
+
+          echo "" >> /tmp/pr_body.md
+          echo "---" >> /tmp/pr_body.md
+          echo "*このPRは GitHub Actions により自動作成されました*" >> /tmp/pr_body.md
+
+          gh pr create \
+            --base main \
+            --title "Release v${NPM_VERSION}" \
+            --body-file /tmp/pr_body.md
+
+      - name: No changes summary
+        if: steps.changes.outputs.has_changes == 'false'
+        run: |
+          echo "::notice::No changes since last release"
+
+      - name: PR already exists summary
+        if: steps.existing_pr.outputs.exists == 'true'
+        run: |
+          echo "::notice::Release PR already exists"
