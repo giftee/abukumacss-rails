@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gifteeabukumacss-rails (3.2.0)
+    gifteeabukumacss-rails (3.2.1)
 
 GEM
   remote: https://rubygems.org/
