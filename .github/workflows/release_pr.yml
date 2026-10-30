@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0 # タグを取得するために必要
 
       - name: Setup ruby
-        uses: ruby/setup-ruby@319994f95fa847cf3fb3cd3dbe89f6dcde9f178f # v1.295.0
+        uses: ruby/setup-ruby@26e5b7d197ebf60545ee9667bcbace0be11ccaec # v1.334.0
         with:
           ruby-version: 3.3.8
           # bundler-cache を使わない (frozen mode で Gemfile.lock を更新できなくなるため)
