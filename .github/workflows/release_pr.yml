@@ -16,14 +16,14 @@ jobs:
         with:
           fetch-depth: 0 # タグを取得するために必要
 
-      - name: Setup Takumi Guard for RubyGems
-        uses: flatt-security/setup-takumi-guard-rubygems@fdbb9a35707bb93fa3e91dd1b034f31b5421aedd # v1
-
       - name: Setup ruby
         uses: ruby/setup-ruby@319994f95fa847cf3fb3cd3dbe89f6dcde9f178f # v1.295.0
         with:
           ruby-version: 3.3.8
           # bundler-cache を使わない (frozen mode で Gemfile.lock を更新できなくなるため)
+
+      - name: Setup Takumi Guard for RubyGems
+        uses: flatt-security/setup-takumi-guard-rubygems@fdbb9a35707bb93fa3e91dd1b034f31b5421aedd # v1
 
       - name: Get latest release tag
         id: latest_release
