@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout with push
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Setup Takumi Guard for RubyGems
+        uses: flatt-security/setup-takumi-guard-rubygems@fdbb9a35707bb93fa3e91dd1b034f31b5421aedd # v1
       - name: Setup ruby
         uses: ruby/setup-ruby@319994f95fa847cf3fb3cd3dbe89f6dcde9f178f # v1.295.0
         with:
