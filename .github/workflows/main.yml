@@ -18,14 +18,14 @@ jobs:
       - name: Setup ruby
         uses: ruby/setup-ruby@26e5b7d197ebf60545ee9667bcbace0be11ccaec # v1.334.0
         with:
-          ruby-version: 3.4.2
+          ruby-version: ruby
           bundler-cache: false
       - name: Setup Takumi Guard for RubyGems
         uses: flatt-security/setup-takumi-guard-rubygems@fdbb9a35707bb93fa3e91dd1b034f31b5421aedd # v1
       - name: Bundle install
         uses: ruby/setup-ruby@26e5b7d197ebf60545ee9667bcbace0be11ccaec # v1.334.0
         with:
-          ruby-version: 3.4.2
+          ruby-version: ruby
           bundler-cache: true
           cache-version: 2
       - name: Install dependencies
